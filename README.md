@@ -30,4 +30,5 @@ a:			create new file
 a:			create new dir if it ends with a "/"
 d:			delete the current file
 ctrl + alt:		resize
+ctrl + r:		run the current python file
 ```
