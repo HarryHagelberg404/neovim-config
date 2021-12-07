@@ -23,6 +23,9 @@ Plug 'drewtempelmeyer/palenight.vim'
 Plug 'kkoomen/vim-doge', { 'do': { -> doge#install() } }
 Plug 'omnisharp/omnisharp-vim'
 Plug 'neovim/nvim-lspconfig'
+Plug 'ryanoasis/vim-devicons'
+Plug 'yaegassy/coc-ansible', {'do': 'yarn install --frozen-lockfile'}
+Plug 'pearofducks/ansible-vim'
 
 call plug#end()
 " END: VIM-Plug plugins
@@ -141,6 +144,7 @@ endif
 set background=dark
 colorscheme palenight
 " END: Editor colorscheme
+
 
 " START: lua stuff
 lua <<EOF
