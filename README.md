@@ -1,4 +1,4 @@
-#### NEOVIM paired with ALACRITTY
+#### NEOVIM paired with KITTY (terminal) and TMUX (terminal multiplexor)
 
 ## A very pleasant duo with powerfull and useful plugins
 
@@ -6,16 +6,22 @@ very pog
 
 will be updated each time when configured differently
 
-neovim config is inside the git repository and the ~/.config/alacritty.yml should contain the following contents inside:
-```
-font:
-  normal:
-    family: Fira Code
-  bold
-    family: Fira Code
-  italic:
-    family: Fira Code
-```
+Current terminal: kitty
+Works really well and is very clean whe title bar is removed.
+A lot of configurability.
+Make sure to use firacode and specify accordingly in kitty.conf
+I've included kitty.conf so the current config wont get lost.
+
+## Prerequties
+
+npm + node
+python
+perl
+vim-plug (paru)
+icons for chadtree
+fira code font
+kitty (terminal)
+...
 
 ## Shortcuts / cheatsheet
 
@@ -60,4 +66,7 @@ a:			create new dir if it ends with a "/"
 d:			delete the current file
 ctrl + alt:		resize
 ctrl + r:		run the current python file
+--- KITTY ---
+Mouse selction: copy contents into clipboard
+Right click: paste clipboard contents
 ```
