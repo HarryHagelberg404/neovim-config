@@ -7,7 +7,6 @@ Plug 'nvim-treesitter/nvim-treesitter', {'do': ':TSUpdate'}
 Plug 'preservim/nerdcommenter'
 Plug 'b3nj5m1n/kommentary'
 Plug 'Yggdroot/indentLine'
-Plug 'iamcco/markdown-preview.nvim', { 'do': { -> mkdp#util#install() }, 'for': ['markdown', 'vim-plug']}
 Plug 'ryanoasis/vim-devicons'
 Plug 'psliwka/vim-smoothie'
 Plug 'junegunn/fzf', { 'do': { -> fzf#install() } }
@@ -16,20 +15,16 @@ Plug 'yamatsum/nvim-cursorline'
 Plug 'windwp/nvim-autopairs'
 Plug 'p00f/nvim-ts-rainbow'
 Plug 'ms-jpq/chadtree', {'branch': 'chad', 'do': 'python3 -m chadtree deps'}
-Plug 'monaqa/dial.nvim'
 Plug 'nvim-lua/plenary.nvim'
 Plug 'TimUntersberger/neogit'
-Plug 'drewtempelmeyer/palenight.vim'
 Plug 'kkoomen/vim-doge', { 'do': { -> doge#install() } }
-Plug 'omnisharp/omnisharp-vim'
 Plug 'neovim/nvim-lspconfig'
 Plug 'ryanoasis/vim-devicons'
-Plug 'yaegassy/coc-ansible', {'do': 'yarn install --frozen-lockfile'}
-Plug 'pearofducks/ansible-vim'
-
+Plug 'nvim-telescope/telescope.nvim', { 'tag': '0.1.3' }
+Plug 'nosduco/remote-sshfs.nvim'
 call plug#end()
 " END: VIM-Plug plugins
-
+set encoding=UTF-8
 " START: Basic vim configuration
 " prevent netrw explorer loading on startup
 let loaded_netrwPlugin=1
@@ -105,10 +100,26 @@ nnoremap <Tab>   >>
 nnoremap <S-Tab> <<
 vnoremap <Tab>   >><Esc>gv
 vnoremap <S-Tab> <<<Esc>gv
-" Make <CR> auto-select the first completion item and notify coc.nvim to
-" format on enter, <cr> could be remapped by other vim plugin
-inoremap <silent><expr> <cr> pumvisible() ? coc#_select_confirm()
+" Use tab for trigger completion with characters ahead and navigate
+" NOTE: There's always complete item selected by default, you may want to enable
+" no select by `"suggest.noselect": true` in your configuration file
+" NOTE: Use command ':verbose imap <tab>' to make sure tab is not mapped by
+" other plugin before putting this into your config
+inoremap <silent><expr> <TAB>
+      \ coc#pum#visible() ? coc#pum#next(1) :
+      \ CheckBackspace() ? "\<Tab>" :
+      \ coc#refresh()
+inoremap <expr><S-TAB> coc#pum#visible() ? coc#pum#prev(1) : "\<C-h>"
+
+" Make <CR> to accept selected completion item or notify coc.nvim to format
+" <C-g>u breaks current undo, please make your own choice
+inoremap <silent><expr> <CR> coc#pum#visible() ? coc#pum#confirm()
                               \: "\<C-g>u\<CR>\<c-r>=coc#on_enter()\<CR>"
+
+function! CheckBackspace() abort
+  let col = col('.') - 1
+  return !col || getline('.')[col - 1]  =~# '\s'
+endfunction
 " show documentation
 nnoremap <silent> K :call <SID>show_documentation()<CR>
 " symbol renaming
@@ -116,42 +127,22 @@ nmap <F2> <Plug>(coc-rename)
 " fuzzy file finder
 nmap ff :Files<CR>
 nmap fg :GFiles<CR>
-" dial.nvim binds
-nmap <C-Up> <Plug>(dial-increment)
-nmap <C-Down> <Plug>(dial-decrement)
 " neogit binds
 nmap <space>c :Neogit<CR>
 nmap <space>p :Neogit push<CR>
-" md preview toggle
-nmap <C-p> <Plug>MarkdownPreviewToggle
-" Open terminal and run current file upon call
-nnoremap <C-R> :call Termpy() <CR>
+" test
+nmap rc :RemoteSSHFSConnect<CR>
+nmap rd :RemoteSSHFSDisconnect<CR>
+nmap re :RemoteSSHFSEdit<CR>
 " END: Custom keybinds
 "----
-" START: Editor colorscheme
-if (has("nvim"))
-  "For Neovim 0.1.3 and 0.1.4 < https://github.com/neovim/neovim/pull/2198 >
-  let $NVIM_TUI_ENABLE_TRUE_COLOR=1
-endif
-
-"For Neovim > 0.1.5 and Vim > patch 7.4.1799 < https://github.com/vim/vim/commit/61be73bb0f965a895bfb064ea3e55476ac175162 >
-"Based on Vim patch 7.4.1770 (`guicolors` option) < https://github.com/vim/vim/commit/8a633e3427b47286869aa4b96f2bfc1fe65b25cd >
-" < https://github.com/neovim/neovim/wiki/Following-HEAD#20160511 >
-if (has("termguicolors"))
-  set termguicolors
-endif
-
-set background=dark
-colorscheme palenight
-" END: Editor colorscheme
-
 
 " START: lua stuff
 lua <<EOF
 require('nvim-autopairs').setup()
 
 require'nvim-treesitter.configs'.setup {
-  highlight = {
+    highlight = {
     enable = true,
     custom_captures = {
       -- Highlight the @foo.bar capture group with the "Identifier" highlight group.
@@ -185,6 +176,73 @@ require'nvim-treesitter.configs'.setup {
   }
 }
 
+require('remote-sshfs').setup({})
+require('telescope').load_extension 'remote-sshfs'
+
+local api = require('remote-sshfs.api')
+
+-- (optional) Override telescope find_files and live_grep to make dynamic based on if connected to host
+local builtin = require("telescope.builtin")
+local connections = require("remote-sshfs.connections")
+vim.keymap.set("n", "<leader>ff", function()
+	if connections.is_connected then
+		api.find_files()
+	else
+		builtin.find_files()
+	end
+end, {})
+vim.keymap.set("n", "<leader>fg", function()
+	if connections.is_connected then
+		api.live_grep()
+	else
+		builtin.live_grep()
+	end
+end, {})
+
+require('remote-sshfs').setup{
+  connections = {
+    ssh_configs = { -- which ssh configs to parse for hosts list
+      vim.fn.expand "$HOME" .. "/.ssh/config",
+      "/etc/ssh/ssh_config",
+      -- "/path/to/custom/ssh_config"
+    },
+    sshfs_args = { -- arguments to pass to the sshfs command
+      "-o reconnect",
+      "-o ConnectTimeout=5",
+    },
+  },
+  mounts = {
+    base_dir = vim.fn.expand "$HOME" .. "/.sshfs/", -- base directory for mount points
+    unmount_on_exit = true, -- run sshfs as foreground, will unmount on vim exit
+  },
+  handlers = {
+    on_connect = {
+      change_dir = true, -- when connected change vim working directory to mount point
+    },
+    on_disconnect = {
+      clean_mount_folders = false, -- remove mount point folder on disconnect/unmount
+    },
+    on_edit = {}, -- not yet implemented
+  },
+  ui = {
+    select_prompts = false, -- not yet implemented
+    confirm = {
+      connect = true, -- prompt y/n when host is selected to connect to
+      change_dir = false, -- prompt y/n to change working directory on connection (only applicable if handlers.on_connect.change_dir is enabled)
+    },
+  },
+  log = {
+    enable = false, -- enable logging
+    truncate = false, -- truncate logs
+    types = { -- enabled log types
+      all = false,
+      util = false,
+      handler = false,
+      sshfs = false,
+    },
+  },
+}
+
 local neogit = require('neogit')
 
 neogit.setup {}
@@ -200,9 +258,5 @@ function! s:show_documentation()
   else
     execute '!' . &keywordprg . " " . expand('<cword>')
   endif
-endfunction
-
-function! Termpy()
-  exec winheight(0)/4."split" | terminal python3 %
 endfunction
 " END: functions

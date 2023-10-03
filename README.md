@@ -23,6 +23,9 @@ fira code font
 kitty (terminal)
 ...
 
+Currently using coc-tsserver for linting, make sure its installed and configured
+Have been using telescope for mac window resizing
+
 ## Shortcuts / cheatsheet
 
 will be updated when more shortcuts is added
@@ -65,7 +68,23 @@ a:			create new file
 a:			create new dir if it ends with a "/"
 d:			delete the current file
 ctrl + alt:		resize
-ctrl + r:		run the current python file
+--- ChadTree ---
+C : move up from dir
+c : move down to selected dir
+b : set homedir to selected dir
+s : select file or dir
+S : clear selection
+p : copy to selected dir
+x : move to selected dir
+X : mark file or dir
++ : size dir tree up
+- : size dir tree down
+w : open file vertically
+W : open file remotely
+rc : remote connect
+rd : remote disconnect
+re : edit hosts file
+ff : find file
 --- KITTY ---
 Mouse selction: copy contents into clipboard
 Right click: paste clipboard contents
